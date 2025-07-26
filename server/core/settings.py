@@ -1,14 +1,23 @@
+import os
 from pathlib import Path
-
-ASGI_APPLICATION = 'core.asgi.application'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-r0t=p9pgd)*oc)$83l*e!u7r18r7nlg4u@-&pq9ic3jw%1*)nt'
 
-DEBUG = True
 
-ALLOWED_HOSTS = []
+# Read secret key from environment or use fallback (not recommended for production)
+SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-insecure-key")
+
+
+
+# Read debug status
+DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+
+
+
+# Read allowed hosts from env, comma-separated
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
 
 
@@ -20,17 +29,15 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'daphne',  # <-- moved here
+    'daphne',
     'django.contrib.staticfiles',
     'rest_framework',
     'channels',
     'notes',
 ]
 
-
-
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # <- MUST be first
+    'corsheaders.middleware.CorsMiddleware',  # Must be first
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,8 +64,11 @@ TEMPLATES = [
     },
 ]
 
+# WSGI and ASGI
 WSGI_APPLICATION = 'core.wsgi.application'
+ASGI_APPLICATION = 'core.asgi.application'
 
+# Database (using SQLite for dev, you can switch to PostgreSQL for Render)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -66,44 +76,42 @@ DATABASES = {
     }
 }
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# Internationalization
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-STATIC_URL = 'static/'
+
+
+# Static files (important for deployment)
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS allowed origins
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
 
-# Django Channels Redis config
+
+# CORS - Read allowed origins from env
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
+
+
+
+# Django Channels - Redis
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [os.environ.get("REDIS_URL", "redis://127.0.0.1:6379")],
         },
     }
 }
